@@ -117,6 +117,15 @@ async function connectWallet() {
 
       contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
       console.log('Uspješno povezan s ugovorom.');
+
+      // Osluškivači događaja :-)
+      contract.on('GameWon', (winner) => {
+        alert(`🎉 Igra je završila! Pobjednik je: ${winner}`);
+      });
+
+      contract.on('GameDraw', () => {
+        alert('🤝 Igra je završila neriješeno!');
+      });
     } catch (err) {
       console.error('Greška prilikom povezivanja:', err);
       alert('Neuspješno povezivanje s MetaMaskom.');
