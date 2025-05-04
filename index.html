@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Crypto Tic Tac Toe</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+  </head>
+  <body>
+    <h1>Crypto Tic Tac Toe</h1>
+
+    <button onclick="connectWallet()">🔗 Poveži MetaMask</button>
+    <p id="wallet-address">Nije povezano</p>
+
+    <button onclick="joinGame()">🎮 Pridruži se igri</button>
+
+    <h2>Napravite potez</h2>
+    <input type="number" id="row" placeholder="Red (0-2)" />
+    <input type="number" id="col" placeholder="Stupac (0-2)" />
+    <button onclick="makeMove()">✅ Potez</button>
+
+    <h2>Status ploče</h2>
+    <button onclick="getBoard()">🔄 Dohvati ploču</button>
+    <pre id="board-output">---</pre>
+
+    <script src="app.js"></script>
+  </body>
+</html>
