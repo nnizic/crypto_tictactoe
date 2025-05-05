@@ -6,8 +6,9 @@ let contract;
 let currentAccount;
 
 // Adresa i ABI pametnog ugovora
-const contractAddress = '0x92b14468090777f960eDfECF3D9810502f13C88e';
+const contractAddress = '0xb4cA6A78278721c058957e9134f0A173045b3295';
 const contractABI = [
+
   {
     anonymous: false,
     inputs: [
@@ -294,6 +295,7 @@ const contractABI = [
     stateMutability: 'view',
     type: 'function',
   },
+
 ];
 
 // 🔗 Povezivanje s MetaMask novčanikom
