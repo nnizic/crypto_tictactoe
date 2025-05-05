@@ -1,28 +1,93 @@
-let contract;
-let signer;
+// app.js (kompatibilan s index.html)
 
-const CONTRACT_ADDRESS = '0x8e88a9E66496C269bd4338E1CD6B8D329C8d3916'; // zamijeni ako deployaš novi
-const CONTRACT_ABI = [
-  // Samo jedan sloj objekata, bez dodatne [] unutar
+let provider;
+let signer;
+let contract;
+let currentAccount;
+
+// Adresa i ABI pametnog ugovora
+const contractAddress = '0x92b14468090777f960eDfECF3D9810502f13C88e';
+const contractABI = [
   {
     anonymous: false,
-    inputs: [],
+    inputs: [
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'gameId',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'address',
+        name: 'creator',
+        type: 'address',
+      },
+    ],
+    name: 'GameCreated',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'gameId',
+        type: 'uint256',
+      },
+    ],
     name: 'GameDraw',
     type: 'event',
   },
   {
     anonymous: false,
-    inputs: [{
-      indexed: false, internalType: 'address', name: 'playerO', type: 'address',
-    }],
+    inputs: [
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'gameId',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'address',
+        name: 'joiner',
+        type: 'address',
+      },
+    ],
     name: 'GameJoined',
     type: 'event',
   },
   {
     anonymous: false,
-    inputs: [{
-      indexed: false, internalType: 'address', name: 'winner', type: 'address',
-    }],
+    inputs: [
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'gameId',
+        type: 'uint256',
+      },
+    ],
+    name: 'GameReset',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'gameId',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'address',
+        name: 'winner',
+        type: 'address',
+      },
+    ],
     name: 'GameWon',
     type: 'event',
   },
@@ -30,13 +95,28 @@ const CONTRACT_ABI = [
     anonymous: false,
     inputs: [
       {
-        indexed: false, internalType: 'address', name: 'player', type: 'address',
+        indexed: false,
+        internalType: 'uint256',
+        name: 'gameId',
+        type: 'uint256',
       },
       {
-        indexed: false, internalType: 'uint8', name: 'row', type: 'uint8',
+        indexed: false,
+        internalType: 'address',
+        name: 'player',
+        type: 'address',
       },
       {
-        indexed: false, internalType: 'uint8', name: 'col', type: 'uint8',
+        indexed: false,
+        internalType: 'uint8',
+        name: 'row',
+        type: 'uint8',
+      },
+      {
+        indexed: false,
+        internalType: 'uint8',
+        name: 'col',
+        type: 'uint8',
       },
     ],
     name: 'MoveMade',
@@ -44,6 +124,25 @@ const CONTRACT_ABI = [
   },
   {
     inputs: [],
+    name: 'createGame',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'payable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'gameId',
+        type: 'uint256',
+      },
+    ],
     name: 'joinGame',
     outputs: [],
     stateMutability: 'payable',
@@ -51,8 +150,21 @@ const CONTRACT_ABI = [
   },
   {
     inputs: [
-      { internalType: 'uint8', name: 'row', type: 'uint8' },
-      { internalType: 'uint8', name: 'col', type: 'uint8' },
+      {
+        internalType: 'uint256',
+        name: 'gameId',
+        type: 'uint256',
+      },
+      {
+        internalType: 'uint8',
+        name: 'row',
+        type: 'uint8',
+      },
+      {
+        internalType: 'uint8',
+        name: 'col',
+        type: 'uint8',
+      },
     ],
     name: 'makeMove',
     outputs: [],
@@ -61,126 +173,217 @@ const CONTRACT_ABI = [
   },
   {
     inputs: [
-      { internalType: 'uint256', name: '', type: 'uint256' },
-      { internalType: 'uint256', name: '', type: 'uint256' },
+      {
+        internalType: 'uint256',
+        name: 'gameId',
+        type: 'uint256',
+      },
     ],
-    name: 'board',
-    outputs: [{ internalType: 'uint8', name: '', type: 'uint8' }],
-    stateMutability: 'view',
+    name: 'resetGame',
+    outputs: [],
+    stateMutability: 'nonpayable',
     type: 'function',
   },
   {
     inputs: [],
-    name: 'currentPlayer',
-    outputs: [{ internalType: 'address', name: '', type: 'address' }],
+    name: 'gameCounter',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
     stateMutability: 'view',
     type: 'function',
   },
   {
-    inputs: [],
-    name: 'gameActive',
-    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    name: 'games',
+    outputs: [
+      {
+        internalType: 'address',
+        name: 'playerX',
+        type: 'address',
+      },
+      {
+        internalType: 'address',
+        name: 'playerO',
+        type: 'address',
+      },
+      {
+        internalType: 'address',
+        name: 'currentPlayer',
+        type: 'address',
+      },
+      {
+        internalType: 'bool',
+        name: 'active',
+        type: 'bool',
+      },
+      {
+        internalType: 'uint256',
+        name: 'stake',
+        type: 'uint256',
+      },
+    ],
     stateMutability: 'view',
     type: 'function',
   },
   {
-    inputs: [],
-    name: 'playerO',
-    outputs: [{ internalType: 'address', name: '', type: 'address' }],
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'gameId',
+        type: 'uint256',
+      },
+    ],
+    name: 'getBoard',
+    outputs: [
+      {
+        internalType: 'enum TicTacToe.Mark[3][3]',
+        name: '',
+        type: 'uint8[3][3]',
+      },
+    ],
     stateMutability: 'view',
     type: 'function',
   },
   {
-    inputs: [],
-    name: 'playerX',
-    outputs: [{ internalType: 'address', name: '', type: 'address' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'stake',
-    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'gameId',
+        type: 'uint256',
+      },
+    ],
+    name: 'getGameInfo',
+    outputs: [
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
+      },
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
+      },
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
+      },
+      {
+        internalType: 'bool',
+        name: '',
+        type: 'bool',
+      },
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
     stateMutability: 'view',
     type: 'function',
   },
 ];
 
+// 🔗 Povezivanje s MetaMask novčanikom
 async function connectWallet() {
-  if (typeof window.ethereum !== 'undefined') {
-    try {
-      await window.ethereum.request({ method: 'eth_requestAccounts' });
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      signer = provider.getSigner();
-      const address = await signer.getAddress();
-      document.getElementById('wallet-address').innerText = `Povezano: ${address}`;
-
-      contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-      console.log('Uspješno povezan s ugovorom.');
-
-      // Osluškivači događaja :-)
-      contract.on('GameWon', (winner) => {
-        alert(`🎉 Igra je završila! Pobjednik je: ${winner}`);
-      });
-
-      contract.on('GameDraw', () => {
-        alert('🤝 Igra je završila neriješeno!');
-      });
-    } catch (err) {
-      console.error('Greška prilikom povezivanja:', err);
-      alert('Neuspješno povezivanje s MetaMaskom.');
-    }
+  if (window.ethereum) {
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    await provider.send('eth_requestAccounts', []);
+    signer = provider.getSigner();
+    currentAccount = await signer.getAddress();
+    contract = new ethers.Contract(contractAddress, contractABI, signer);
+    document.getElementById('wallet-address').innerText = `Wallet: ${currentAccount}`;
   } else {
-    alert('MetaMask nije instaliran!');
+    alert('MetaMask nije pronađen');
   }
 }
 
+// 🎮 Kreiranje nove igre
+async function createGame() {
+  const stake = document.getElementById('stake').value;
+  const tx = await contract.createGame({ value: ethers.utils.parseEther(stake) });
+  const receipt = await tx.wait();
+  const gameId = receipt.events.find((e) => e.event === 'GameCreated').args.gameId.toString();
+  document.getElementById('created-game-id').innerText = gameId;
+}
+
+// 📥 Pridruživanje postojećoj igri
 async function joinGame() {
-  if (!contract) {
-    alert('Prvo se moraš povezati s MetaMaskom!');
-    return;
-  }
+  const gameId = document.getElementById('game-id').value;
+  const stake = document.getElementById('join-stake').value;
   try {
-    const stake = await contract.stake();
-    const tx = await contract.joinGame({ value: stake });
+    const tx = await contract.joinGame(gameId, { value: ethers.utils.parseEther(stake) });
     await tx.wait();
-    alert('Uspješno si se pridružio igri!');
+    alert(`Pridružen si igri #${gameId}`);
   } catch (err) {
-    console.error('Greška prilikom pridruživanja:', err);
-    alert(`Greška: ${err?.reason}` || err.message);
+    alert(err.reason || err.message);
   }
 }
 
+// ✅ Slanje poteza
 async function makeMove() {
-  if (!contract) {
-    alert('Prvo se moraš povezati s MetaMaskom!');
-    return;
-  }
+  const gameId = document.getElementById('move-game-id').value;
   const row = parseInt(document.getElementById('row').value);
   const col = parseInt(document.getElementById('col').value);
   try {
-    const tx = await contract.makeMove(row, col);
+    const tx = await contract.makeMove(gameId, row, col);
     await tx.wait();
-    alert('Potez zabilježen!');
+    alert('Potez poslan!');
   } catch (err) {
-    console.error('Greška kod poteza:', err);
-    alert(`Greška kod poteza: ${err?.reason}` || err.message);
+    alert(err.reason || err.message);
   }
 }
 
+// 📋 Dohvaćanje ploče
 async function getBoard() {
-  if (!contract) {
-    alert('Prvo se moraš povezati s MetaMaskom!');
-    return;
-  }
+  const gameId = document.getElementById('board-game-id').value;
+  const board = await contract.getBoard(gameId);
   let output = '';
-  for (let row = 0; row < 3; row++) {
-    let line = '';
-    for (let col = 0; col < 3; col++) {
-      const cell = await contract.board(row, col);
-      line += `${cell.toString()} `;
+  for (let i = 0; i < 3; i++) {
+    let row = '';
+    for (let j = 0; j < 3; j++) {
+      const mark = board[i][j];
+      row += mark === 1 ? 'X' : mark === 2 ? 'O' : '-';
+      row += ' ';
     }
-    output += `${line.trim()}\n`;
+    output += `${row.trim()}\n`;
   }
   document.getElementById('board-output').innerText = output;
 }
+
+// 🏆 Dohvaćanje statusa igre
+async function getGameStatus() {
+  const gameId = document.getElementById('status-game-id').value;
+  const info = await contract.getGameInfo(gameId);
+  const [playerX, playerO, currentPlayer, active, stake] = info;
+  let statusText = `Igra aktivna: ${active}\n`;
+  statusText += `X: ${playerX}\nO: ${playerO}\nNa potezu: ${currentPlayer}`;
+  document.getElementById('game-status-output').innerText = statusText;
+}
+
+// 🔄 Resetiranje igre
+async function resetGame() {
+  const gameId = document.getElementById('reset-game-id').value;
+  try {
+    const tx = await contract.resetGame(gameId);
+    await tx.wait();
+    alert('Igra je resetirana.');
+  } catch (err) {
+    alert(err.reason || err.message);
+  }
+}
+
+// 🎯 Nema automatskih listenera, sve je vezano uz HTML dugmiće
+// => inline onClick handleri već postoje u index.html

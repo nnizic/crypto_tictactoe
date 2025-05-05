@@ -1,7 +1,9 @@
 <!doctype html>
-<html>
+<html lang="hr">
   <head>
+    <meta charset="UTF-8" />
     <title>Crypto Tic Tac Toe</title>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
   </head>
   <body>
@@ -10,16 +12,45 @@
     <button onclick="connectWallet()">🔗 Poveži MetaMask</button>
     <p id="wallet-address">Nije povezano</p>
 
-    <button onclick="joinGame()">🎮 Pridruži se igri</button>
+    <h2>🆕 Kreiraj novu partiju</h2>
+    <input
+      type="number"
+      id="stake"
+      placeholder="Ulog u ETH (npr. 0.01)"
+      step="0.001"
+    />
+    <button onclick="createGame()">🎮 Nova igra</button>
+    <p>Game ID: <span id="created-game-id">-</span></p>
 
-    <h2>Napravite potez</h2>
+    <h2>📥 Pridruži se postojećoj partiji</h2>
+    <input type="text" id="game-id" placeholder="Unesi Game ID" />
+    <input
+      type="number"
+      id="join-stake"
+      placeholder="Ulog u ETH"
+      step="0.001"
+    />
+    <button onclick="joinGame()">Pridruži se</button>
+
+    <h2>✅ Napravi potez</h2>
+    <input type="number" id="move-game-id" placeholder="Game ID" />
     <input type="number" id="row" placeholder="Red (0-2)" />
     <input type="number" id="col" placeholder="Stupac (0-2)" />
-    <button onclick="makeMove()">✅ Potez</button>
+    <button onclick="makeMove()">Potez</button>
 
-    <h2>Status ploče</h2>
-    <button onclick="getBoard()">🔄 Dohvati ploču</button>
+    <h2>📋 Ploča</h2>
+    <input type="number" id="board-game-id" placeholder="Game ID" />
+    <button onclick="getBoard()">Dohvati ploču</button>
     <pre id="board-output">---</pre>
+
+    <h2>🏆 Status igre</h2>
+    <input type="number" id="status-game-id" placeholder="Game ID" />
+    <button onclick="getGameStatus()">Dohvati status</button>
+    <pre id="game-status-output">---</pre>
+
+    <h2>🔄 Resetiranje</h2>
+    <input type="number" id="reset-game-id" placeholder="Game ID" />
+    <button onclick="resetGame()">Resetiraj igru</button>
 
     <script src="app.js"></script>
   </body>
