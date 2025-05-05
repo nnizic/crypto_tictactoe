@@ -52,7 +52,7 @@ contract TicTacToe {
         Game storage game = games[gameId];
         require(game.playerO == address(0), "Igra vec ima 2 igraca");
         require(msg.value == game.stake, "Ulog mora biti isti");
-
+        require(msg.sender != game.playerX, "Ne mozes igrati sam protiv sebe");
         game.playerO = msg.sender;
         emit GameJoined(gameId, msg.sender);
     }
