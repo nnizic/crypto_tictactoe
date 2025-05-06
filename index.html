@@ -13,6 +13,7 @@
     <p id="wallet-address">Nije povezano</p>
 
     <h2>🆕 Kreiraj novu partiju</h2>
+    <h5>Kreator je automatski pridružen novoj partiji</h5>
     <input
       type="number"
       id="stake"
@@ -47,6 +48,9 @@
     <input type="number" id="status-game-id" placeholder="Game ID" />
     <button onclick="getGameStatus()">Dohvati status</button>
     <pre id="game-status-output">---</pre>
+
+    <h3>🏁 Rezultat</h3>
+    <pre id="game-winner-output">Čeka se ishod igre...</pre>
 
     <h2>🔄 Resetiranje</h2>
     <input type="number" id="reset-game-id" placeholder="Game ID" />

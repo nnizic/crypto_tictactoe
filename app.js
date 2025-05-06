@@ -307,6 +307,21 @@ async function connectWallet() {
     currentAccount = await signer.getAddress();
     contract = new ethers.Contract(contractAddress, contractABI, signer);
     document.getElementById('wallet-address').innerText = `Wallet: ${currentAccount}`;
+
+    contract.on('GameWon', (gameId, winner) => {
+      const activeGameId = document.getElementById('status-game-id').value;
+      if (gameId.toString() === activeGameId) {
+        const winnerShort = `${winner.substring(0, 6)}...${winner.slice(-4)}`;
+        document.getElementById('game-winner-output').innerText = `🎉 Igra #${gameId} je gotova!\nPobjednik: ${winnerShort}`;
+      }
+    });
+
+    contract.on('GameDraw', (gameId) => {
+      const activeGameId = document.getElementById('status-game-id').value;
+      if (gameId.toString() === activeGameId) {
+        document.getElementById('game-winner-output').innerText = `🤝 Igra #${gameId} završila je neriješeno!`;
+      }
+    });
   } else {
     alert('MetaMask nije pronađen');
   }
@@ -386,6 +401,3 @@ async function resetGame() {
     alert(err.reason || err.message);
   }
 }
-
-// 🎯 Nema automatskih listenera, sve je vezano uz HTML dugmiće
-// => inline onClick handleri već postoje u index.html
