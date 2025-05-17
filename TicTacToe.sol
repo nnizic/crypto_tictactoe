@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-contract TicTacToe {
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract TicTacToe is ERC721URIStorage, Ownable {
     enum Mark { Empty, X, O }
 
     struct Game {
@@ -14,6 +17,8 @@ contract TicTacToe {
     }
 
     uint256 public gameCounter;
+    uint256 private _tokenIdCounter;
+
     mapping(uint256 => Game) public games;
 
     event GameCreated(uint256 gameId, address creator);
@@ -22,8 +27,10 @@ contract TicTacToe {
     event GameWon(uint256 gameId, address winner);
     event GameDraw(uint256 gameId);
     event GameReset(uint256 gameId);
+    event BadgeMinted(address winner, uint256 tokenId, string uri);
 
-    /// Provjerava je li posiljatelj jedan od igraca
+    constructor() ERC721("TicTacToeBadge", "TTTB") Ownable(msg.sender) {}
+
     modifier onlyPlayers(uint256 gameId) {
         require(
             msg.sender == games[gameId].playerX || msg.sender == games[gameId].playerO,
@@ -32,7 +39,6 @@ contract TicTacToe {
         _;
     }
 
-    /// Kreira novu igru s ulogom
     function createGame() external payable returns (uint256) {
         require(msg.value > 0, "Ulog je obavezan");
 
@@ -47,7 +53,6 @@ contract TicTacToe {
         return gameCounter;
     }
 
-    /// Pridruzivanje drugog igraca igri uz isti ulog
     function joinGame(uint256 gameId) external payable {
         Game storage game = games[gameId];
         require(game.playerO == address(0), "Igra vec ima 2 igraca");
@@ -57,7 +62,6 @@ contract TicTacToe {
         emit GameJoined(gameId, msg.sender);
     }
 
-    /// Izvodenje poteza
     function makeMove(uint256 gameId, uint8 row, uint8 col) external onlyPlayers(gameId) {
         Game storage game = games[gameId];
         require(game.active, "Igra nije aktivna");
@@ -72,22 +76,31 @@ contract TicTacToe {
 
         if (checkWin(game.board, mark)) {
             game.active = false;
-            payable(msg.sender).transfer(address(this).balance);
+
+            // isplata  2 * stake, ne sve iz ugovora!!
+            payable(msg.sender).transfer(game.stake * 2);
+
             emit GameWon(gameId, msg.sender);
+
+            // Mintanje NFT badge pobjedniku
+            if (msg.sender == game.playerX) {
+                mintBadge(msg.sender, "ipfs://bafkreifd5n4iqiiadqr7p2jkw5mowaezapikestmha6xn2gyympmjg3beq");
+            } else {
+                mintBadge(msg.sender, "ipfs://bafkreic3gxxd3bl4kdjnesnjcnxh7o5vwert4r2tosfeubdycisxloiwzy");
+            }
+
         } else if (isDraw(game.board)) {
             game.active = false;
             payable(game.playerX).transfer(game.stake);
             payable(game.playerO).transfer(game.stake);
             emit GameDraw(gameId);
         } else {
-            // Promjena igraca na potezu
             game.currentPlayer = (game.currentPlayer == game.playerX)
                 ? game.playerO
                 : game.playerX;
         }
     }
 
-    /// Resetiranje igre (dozvoljeno tek nakon zavrsetka)
     function resetGame(uint256 gameId) external onlyPlayers(gameId) {
         Game storage game = games[gameId];
         require(!game.active, "Igra je vec aktivna");
@@ -104,7 +117,6 @@ contract TicTacToe {
         emit GameReset(gameId);
     }
 
-    /// Provjera pobjede
     function checkWin(Mark[3][3] memory board, Mark mark) internal pure returns (bool) {
         for (uint8 i = 0; i < 3; i++) {
             if ((board[i][0] == mark && board[i][1] == mark && board[i][2] == mark) ||
@@ -121,7 +133,6 @@ contract TicTacToe {
         return false;
     }
 
-    /// Provjera je li nerijeseno (sva polja puna, nema pobjednika)
     function isDraw(Mark[3][3] memory board) internal pure returns (bool) {
         for (uint8 i = 0; i < 3; i++) {
             for (uint8 j = 0; j < 3; j++) {
@@ -131,12 +142,10 @@ contract TicTacToe {
         return true;
     }
 
-    /// Dohvat stanja ploce
     function getBoard(uint256 gameId) external view returns (Mark[3][3] memory) {
         return games[gameId].board;
     }
 
-    /// Dohvat osnovnih informacija o igri
     function getGameInfo(uint256 gameId)
         external
         view
@@ -151,4 +160,25 @@ contract TicTacToe {
             game.stake
         );
     }
+
+    // Mintanje NFT badgea pobjedniku
+    function mintBadge(address to, string memory tokenURI) internal {
+        require(to != address(0), "Adresa nije ispravna"); // Dodatna zaštita
+        uint256 newTokenId = _tokenIdCounter;
+        _safeMint(to, newTokenId);
+        _setTokenURI(newTokenId, tokenURI);
+        emit BadgeMinted(to, newTokenId, tokenURI);
+        _tokenIdCounter++;
+    }
+
+    // Sprječavanje slučajnih uloga direktno na ugovor
+    receive() external payable {
+        revert("Direktan ETH nije dozvoljen");
+    }
+
+    // Sprječavanje poziva nepostojećih funkcija
+    fallback() external payable {
+        revert("Pozvana nepoznata funkcija");
+    }
 }
+

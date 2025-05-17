@@ -1,0 +1,10 @@
+{
+  "name": "Pobjednik - Igrač O",
+  "description": "NFT značka za pobjednika Tic Tac Toe igre kao Igrač O.",
+  "image": "ipfs://bafybeigjshqr2qynqhalrbvnf2y7oulvytkvu4wf5ma66mvp6jbuchytxy/winnero.png",
+  "attributes": [
+    { "trait_type": "Igrač", "value": "O" },
+    { "trait_type": "Tip", "value": "Pobjednik" },
+    { "trait_type": "Igra", "value": "Tic Tac Toe" }
+  ]
+}
