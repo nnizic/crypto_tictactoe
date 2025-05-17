@@ -992,16 +992,12 @@ async function getNFTInfo() {
 
     const name = metadata.name || 'Nepoznato ime';
     const description = metadata.description || 'Bez opisa';
-    const image = metadata.image || '';
     const imageIpfsUri = metadata.image;
     const imageHttpUri = imageIpfsUri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/');
-    document.getElementById('nft-image').src = imageHttpUri;
-    console.log('Korišteni image URI:', imageHttpUri);
-    console.log(document.getElementById('nft-image'));
 
     document.getElementById('nft-output').innerText = `🎟️ Vlasnik: ${owner}\n🧾 URI: ${uri}\n📛 Naziv: ${name}\n📝 Opis: ${description}`;
     const imgElement = document.getElementById('nft-image');
-    imgElement.src = image;
+    imgElement.src = imageHttpUri;
     imgElement.style.display = 'block';
   } catch (err) {
     alert(err.reason || err.message);
