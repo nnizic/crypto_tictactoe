@@ -49,12 +49,19 @@
     <button onclick="getGameStatus()">Dohvati status</button>
     <pre id="game-status-output">---</pre>
 
-    <h2>🖼️ NFT podaci</h2>
-    <input type="number" id="nft-game-id" placeholder="Game ID" />
-    <button onclick="getNFTInfo()">Dohvati NFT info</button>
-    <pre id="nft-info-output">---</pre>
     <h3>🏁 Rezultat</h3>
     <pre id="game-winner-output">Čeka se ishod igre...</pre>
+
+    <h2>🎨 NFT podaci</h2>
+    <input type="number" id="nft-game-id" placeholder="Game ID za NFT" />
+    <button onclick="getNFTInfo()">Dohvati NFT info</button>
+    <pre id="nft-output">---</pre>
+
+    <img
+      id="nft-image"
+      alt="NFT slika"
+      style="max-width: 300px; margin-top: 20px"
+    />
 
     <h2>🔄 Resetiranje</h2>
     <input type="number" id="reset-game-id" placeholder="Game ID" />

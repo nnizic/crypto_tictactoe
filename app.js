@@ -6,7 +6,7 @@ let contract;
 let currentAccount;
 
 // Adresa i ABI pametnog ugovora
-const contractAddress = '0x2e1F079D44Eb11efBc37E135e96d21Ac29851F4d';
+const contractAddress = '0x92Bc0869199985551aa455268Eda8fC4Bd8104B8';
 const contractABI = [
 
   {
@@ -983,9 +983,27 @@ async function getNFTInfo() {
   const gameId = document.getElementById('nft-game-id').value;
   try {
     const owner = await contract.ownerOf(gameId);
-    const tokenURI = await contract.tokenURI(gameId);
-    document.getElementById('nft-info-output').innerText = `🎟️ Vlasnik: ${owner}\n🧾 URI: ${tokenURI}`;
+    const uri = await contract.tokenURI(gameId);
+
+    // Zamijeni ipfs:// s HTTP gateway URL-om
+    const httpUri = uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/');
+    const response = await fetch(httpUri);
+    const metadata = await response.json();
+
+    const name = metadata.name || 'Nepoznato ime';
+    const description = metadata.description || 'Bez opisa';
+    const image = metadata.image || '';
+    const imageIpfsUri = metadata.image;
+    const imageHttpUri = imageIpfsUri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/');
+    document.getElementById('nft-image').src = imageHttpUri;
+    console.log('Korišteni image URI:', imageHttpUri);
+    console.log(document.getElementById('nft-image'));
+
+    document.getElementById('nft-output').innerText = `🎟️ Vlasnik: ${owner}\n🧾 URI: ${uri}\n📛 Naziv: ${name}\n📝 Opis: ${description}`;
+    const imgElement = document.getElementById('nft-image');
+    imgElement.src = image;
+    imgElement.style.display = 'block';
   } catch (err) {
-    alert(`Greška: ${err.reason || err.message}`);
+    alert(err.reason || err.message);
   }
 }
